@@ -1,8 +1,8 @@
 {
   "name": "bookshelf-archive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "prepublish": "npm run build",
     "test": "eslint ./src; jest --coverage ./src",
