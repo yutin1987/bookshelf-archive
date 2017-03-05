@@ -10,10 +10,15 @@ import bookshelfArchive from '../';
 const orm = bookshelf(knex());
 orm.plugin(bookshelfArchive);
 
-const Model = orm.Model.extend({
+const ArchiveModel = orm.Model.extend({
   tableName: 'tableName',
   hasTimestamps: true,
   archive: ['venus', 'sun', 'moon', 'user'],
+});
+
+const Model = orm.Model.extend({
+  tableName: 'tableName',
+  hasTimestamps: true,
 });
 
 const data = {
@@ -32,17 +37,37 @@ beforeEach(() => {
 
 describe('bookshelf-pretty help', () => {
   it('when save', async () => {
-    const model = new Model();
+    const model = new ArchiveModel();
 
     query.mockClear();
     await model.save({ ...data });
     expect(query).toHaveBeenLastQueriedWith({
-      archive: JSON.stringify({
+      method: 'insert',
+      table: 'tableName',
+      sed_number: data.sedNumber,
+      aut_string: data.autString,
+      deep_line: data.deepLine,
+      archive: {
         venus: data.venus,
         sun: data.sun,
         moon: data.moon,
         user: data.user,
-      }),
+      },
+      createdAt: Date,
+      updatedAt: Date,
+    });
+  });
+
+  it('when save when archive is undefined', async () => {
+    const model = new Model();
+
+    query.mockClear();
+    await model.save({ ...data, user: JSON.stringify(data.user) });
+    expect(query).toHaveBeenLastQueriedWith({
+      venus: data.venus,
+      sun: data.sun,
+      moon: data.moon,
+      user: data.user,
       sed_number: data.sedNumber,
       aut_string: data.autString,
       deep_line: data.deepLine,
@@ -54,7 +79,7 @@ describe('bookshelf-pretty help', () => {
   });
 
   it('when fetch', async () => {
-    const model = new Model();
+    const model = new ArchiveModel();
     query.mockClear();
     query.mockReturnValueOnce(Promise.resolve([{
       sed_number: data.sedNumber,
@@ -71,8 +96,24 @@ describe('bookshelf-pretty help', () => {
     expect(result.toJSON()).toEqual(data);
   });
 
-  it('when where is string', async () => {
+  it('when fetch when archive is undefined', async () => {
     const model = new Model();
+    query.mockClear();
+    query.mockReturnValueOnce(Promise.resolve([{
+      sed_number: data.sedNumber,
+      aut_string: data.autString,
+      deep_line: data.deepLine,
+      venus: data.venus,
+      sun: data.sun,
+      moon: data.moon,
+      user: data.user,
+    }]));
+    const result = await model.fetch();
+    expect(result.toJSON()).toEqual(data);
+  });
+
+  it('when where is string', async () => {
+    const model = new ArchiveModel();
     query.mockClear();
     await model.where('sedNumber', 5).fetchAll();
     expect(query).toHaveBeenLastQueriedWith({
@@ -81,7 +122,7 @@ describe('bookshelf-pretty help', () => {
   });
 
   it('when where is object', async () => {
-    const model = new Model();
+    const model = new ArchiveModel();
     query.mockClear();
     await model.where({ sedNumber: 5 }).fetchAll();
     expect(query).toHaveBeenLastQueriedWith({
@@ -90,7 +131,7 @@ describe('bookshelf-pretty help', () => {
   });
 
   it('when fetchAll', async () => {
-    const model = new Model();
+    const model = new ArchiveModel();
     query.mockClear();
     query.mockReturnValueOnce(Promise.resolve([{
       sed_number: data.sedNumber,

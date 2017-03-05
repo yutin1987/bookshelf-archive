@@ -12,14 +12,13 @@ module.exports = function bookshelfArchive(bookshelf) {
     format: function format(attr) {
       const data = {};
       const archive = {};
-      if (_.size(this.archive)) {
-        _.forEach(attr, (value, name) => {
-          const target = _.includes(this.archive, name) ? archive : data;
-          target[name] = value;
-        });
+      _.forEach(attr, (value, name) => {
+        const target = _.includes(this.archive || [], name) ? archive : data;
+        target[name] = value;
+      });
 
-        if (_.size(archive)) data.archive = JSON.stringify(archive);
-      }
+      if (_.size(archive)) data.archive = JSON.stringify(archive);
+
       return _.mapKeys(data, (value, key) => _.snakeCase(key));
     },
     where: function where(condition, ...args) {
