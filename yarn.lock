@@ -2059,14 +2059,6 @@ jest-environment-node@^19.0.2:
     jest-mock "^19.0.0"
     jest-util "^19.0.2"
 
-jest-expect-queried@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/jest-expect-queried/-/jest-expect-queried-1.2.0.tgz#1851c6d2ef9267762a7035d15dd39c7e158dc3d4"
-  dependencies:
-    chalk "^1.1.3"
-    jest-matcher-utils "^19.0.0"
-    lodash "^4.17.4"
-
 jest-file-exists@^19.0.0:
   version "19.0.0"
   resolved "https://registry.yarnpkg.com/jest-file-exists/-/jest-file-exists-19.0.0.tgz#cca2e587a11ec92e24cfeab3f8a94d657f3fceb8"
@@ -2113,6 +2105,12 @@ jest-message-util@^19.0.0:
   dependencies:
     chalk "^1.1.1"
     micromatch "^2.3.11"
+
+jest-mock-knex@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/jest-mock-knex/-/jest-mock-knex-1.1.0.tgz#6f8243f559f9216cb7cd4065d5285ad138afbfdc"
+  dependencies:
+    lodash "^4.17.4"
 
 jest-mock@^19.0.0:
   version "19.0.0"

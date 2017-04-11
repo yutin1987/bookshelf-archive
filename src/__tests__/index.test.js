@@ -1,151 +1,155 @@
 /* eslint no-param-reassign: ["error", { "props": false }] */
 
 import _ from 'lodash';
-import faker from 'faker';
-import knex, { query } from 'knex';
-import { toHaveBeenLastQueriedWith } from 'jest-expect-queried';
+import knex, { client } from 'knex';
 import bookshelf from 'bookshelf';
-import bookshelfArchive from '../';
+import archive from '../';
 
-const orm = bookshelf(knex());
-orm.plugin(bookshelfArchive);
+const db = bookshelf(knex());
+db.plugin(archive);
 
-const ArchiveModel = orm.Model.extend({
-  tableName: 'tableName',
+class ArchiveModel extends db.Model {
+  static tableName = 'table';
+  static hasTimestamps = true;
+  static softDelete = false;
+  static archive = ['venus', 'sun', 'user'];
+}
+
+const Model = db.Model.extend({
+  tableName: 'table',
   hasTimestamps: true,
-  archive: ['venus', 'sun', 'moon', 'user'],
 });
 
-const Model = orm.Model.extend({
-  tableName: 'tableName',
-  hasTimestamps: true,
-});
+const id = 12;
 
 const data = {
-  sedNumber: _.random(1, 999),
-  autString: faker.lorem.word(),
-  deepLine: faker.lorem.lines(),
-  venus: _.random(1, 999),
-  sun: faker.lorem.word(),
-  moon: faker.lorem.word(),
-  user: faker.helpers.userCard(),
+  sed: 10,
+  line: 'wow!! happy',
+  venus: 99,
+  sun: 'new time a day',
+  user: { nickname: 'yutin', sex: true },
 };
 
-beforeEach(() => {
-  jest.addMatchers({ toHaveBeenLastQueriedWith });
-});
+const starBox = 'big';
 
-describe('bookshelf-pretty help', () => {
-  it('when save', async () => {
-    const model = new ArchiveModel();
+describe('bookshelf-archive help', () => {
+  it('when select', async () => {
+    const archiveModel = new ArchiveModel();
 
-    query.mockClear();
-    await model.save({ ...data });
-    expect(query).toHaveBeenLastQueriedWith({
-      method: 'insert',
-      table: 'tableName',
-      sed_number: data.sedNumber,
-      aut_string: data.autString,
-      deep_line: data.deepLine,
-      archive: {
-        venus: data.venus,
-        sun: data.sun,
-        moon: data.moon,
-        user: data.user,
-      },
-      createdAt: Date,
-      updatedAt: Date,
-    });
+    client.mockClear();
+    client.mockReturnValueOnce([{
+      ..._.omit(data, ArchiveModel.archive),
+      archive: JSON.stringify(_.pick(data, ArchiveModel.archive)),
+      star_box: starBox,
+    }]);
+    const reply1 = await archiveModel.fetch();
+    expect(reply1.toJSON()).toEqual({ ...data, starBox });
+
+
+    client.mockClear();
+    client.mockReturnValueOnce([{
+      ..._.omit(data, ArchiveModel.archive),
+      archive: JSON.stringify(_.pick(data, ArchiveModel.archive)),
+      star_box: starBox,
+    }]);
+    const reply2 = await ArchiveModel.table().select('*');
+    expect(reply2).toEqual([{ ...data, starBox }]);
   });
 
-  it('when save when archive is undefined', async () => {
+  it('when insert', async () => {
+    const archiveModel = new ArchiveModel();
     const model = new Model();
 
-    query.mockClear();
+    client.mockClear();
+    await archiveModel.save({ ...data, starBox });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        archive: JSON.stringify(_.pick(data, ArchiveModel.archive)),
+        star_box: starBox,
+      }),
+    );
+
+    client.mockClear();
+    await model.save({ ...data, user: JSON.stringify(data.user), starBox });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ...data,
+        user: JSON.stringify(data.user),
+        star_box: starBox,
+      }),
+    );
+  });
+
+  it('when insert and archive is null', async () => {
+    const archiveModel = new ArchiveModel();
+    const model = new Model();
+
+    client.mockClear();
+    await archiveModel.save({ ..._.omit(data, ArchiveModel.archive) });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ archive: '{}' }));
+
+    client.mockClear();
     await model.save({ ...data, user: JSON.stringify(data.user) });
-    expect(query).toHaveBeenLastQueriedWith({
-      venus: data.venus,
-      sun: data.sun,
-      moon: data.moon,
-      user: data.user,
-      sed_number: data.sedNumber,
-      aut_string: data.autString,
-      deep_line: data.deepLine,
-      createdAt: Date,
-      updatedAt: Date,
-      method: 'insert',
-      table: 'tableName',
-    });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
   });
 
-  it('when fetch', async () => {
-    const model = new ArchiveModel();
-    query.mockClear();
-    query.mockReturnValueOnce(Promise.resolve([{
-      sed_number: data.sedNumber,
-      aut_string: data.autString,
-      deep_line: data.deepLine,
-      archive: JSON.stringify({
-        venus: data.venus,
-        sun: data.sun,
-        moon: data.moon,
-        user: data.user,
+  it('when update', async () => {
+    const archiveModel = new ArchiveModel({ id });
+    const model = new Model({ id });
+
+    client.mockClear();
+    await archiveModel.save({ ...data, starBox });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        archive: JSON.stringify(_.pick(data, ArchiveModel.archive)),
+        star_box: starBox,
       }),
-    }]));
-    const result = await model.fetch();
-    expect(result.toJSON()).toEqual(data);
-  });
+    );
 
-  it('when fetch when archive is undefined', async () => {
-    const model = new Model();
-    query.mockClear();
-    query.mockReturnValueOnce(Promise.resolve([{
-      sed_number: data.sedNumber,
-      aut_string: data.autString,
-      deep_line: data.deepLine,
-      venus: data.venus,
-      sun: data.sun,
-      moon: data.moon,
-      user: data.user,
-    }]));
-    const result = await model.fetch();
-    expect(result.toJSON()).toEqual(data);
-  });
-
-  it('when where is string', async () => {
-    const model = new ArchiveModel();
-    query.mockClear();
-    await model.where('sedNumber', 5).fetchAll();
-    expect(query).toHaveBeenLastQueriedWith({
-      method: 'select', table: 'tableName', sed_number: 5,
-    });
-  });
-
-  it('when where is object', async () => {
-    const model = new ArchiveModel();
-    query.mockClear();
-    await model.where({ sedNumber: 5 }).fetchAll();
-    expect(query).toHaveBeenLastQueriedWith({
-      method: 'select', table: 'tableName', sed_number: 5,
-    });
-  });
-
-  it('when fetchAll', async () => {
-    const model = new ArchiveModel();
-    query.mockClear();
-    query.mockReturnValueOnce(Promise.resolve([{
-      sed_number: data.sedNumber,
-      aut_string: data.autString,
-      deep_line: data.deepLine,
-      archive: JSON.stringify({
-        venus: data.venus,
-        sun: data.sun,
-        moon: data.moon,
-        user: data.user,
+    client.mockClear();
+    await model.save({ ...data, user: JSON.stringify(data.user), starBox });
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ...data,
+        user: JSON.stringify(data.user),
+        star_box: starBox,
       }),
-    }]));
-    const result = await model.fetchAll();
-    expect(result.toJSON()).toEqual([data]);
+    );
+  });
+
+  it('when destroy', async () => {
+    const archiveModel = new ArchiveModel({ id });
+    const model = new Model({ id });
+    const whereModel = new Model().where({ starBox });
+
+    client.mockClear();
+    await archiveModel.destroy();
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ method: 'delete' }));
+
+    client.mockClear();
+    await model.destroy();
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ method: 'update' }));
+
+    client.mockClear();
+    await whereModel.destroy();
+    expect(client).toMatchSnapshot();
+    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ star_box: starBox }));
   });
 });
 

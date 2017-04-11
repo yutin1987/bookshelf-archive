@@ -1,12 +1,12 @@
 {
   "name": "bookshelf-archive",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "npm run build",
     "test": "eslint ./src; jest --coverage ./src",
-    "build": "rm -rf lib/* && babel src --ignore __tests__ --out-dir lib"
+    "build": "rm -rf lib/* && babel src --ignore __tests__ --ignore __mocks__ --out-dir lib"
   },
   "repository": {
     "type": "git",
@@ -36,14 +36,20 @@
     "eslint-plugin-react": "^6.10.0",
     "faker": "^4.1.0",
     "jest": "^19.0.2",
-    "jest-expect-queried": "^1.2.0",
     "knex": "^0.12.7"
   },
   "dependencies": {
+    "jest-mock-knex": "^1.1.0",
     "lodash": "^4.17.4"
   },
   "peerDependencies": {
     "bookshelf": "^0.10.0",
     "knex": "^0.12.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "snapshotSerializers": [
+      "<rootDir>/node_modules/jest-mock-knex/serializer"
+    ]
   }
 }

@@ -1,12 +1,6 @@
 import knex from 'knex';
+import { client } from 'jest-mock-knex';
 
-export const query = jest.fn(() => Promise.resolve([]));
-
-const client = class extends knex.Client {
-  _query = query;
-  acquireConnection = () => Promise.resolve({});
-  processResponse = resp => resp;
-  releaseConnection = () => Promise.resolve();
-};
+export { client } from 'jest-mock-knex';
 
 export default () => knex({ client });

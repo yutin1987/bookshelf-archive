@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`bookshelf-archive help when destroy 1`] = `
+Array [
+  "delete from table where id = 12",
+]
+`;
+
+exports[`bookshelf-archive help when destroy 2`] = `
+Array [
+  "update table set deleted_at = 'DATE' where id = 12",
+]
+`;
+
+exports[`bookshelf-archive help when destroy 3`] = `
+Array [
+  "update table set deleted_at = 'DATE' where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive help when insert 1`] = `
+Array [
+  "insert into table (archive, line, sed, star_box) values ('{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 'wow!! happy', 10, 'big')",
+]
+`;
+
+exports[`bookshelf-archive help when insert 2`] = `
+Array [
+  "insert into table (created_at, line, sed, star_box, sun, updated_at, user, venus) values ('DATE', 'wow!! happy', 10, 'big', 'new time a day', 'DATE', '{nickname:yutin,sex:true}', 99)",
+]
+`;
+
+exports[`bookshelf-archive help when insert and archive is null 1`] = `
+Array [
+  "insert into table (archive, line, sed) values ('{}', 'wow!! happy', 10)",
+]
+`;
+
+exports[`bookshelf-archive help when insert and archive is null 2`] = `
+Array [
+  "insert into table (created_at, line, sed, sun, updated_at, user, venus) values ('DATE', 'wow!! happy', 10, 'new time a day', 'DATE', '{nickname:yutin,sex:true}', 99)",
+]
+`;
+
+exports[`bookshelf-archive help when update 1`] = `
+Array [
+  "update table set archive = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big' where id = 12",
+]
+`;
+
+exports[`bookshelf-archive help when update 2`] = `
+Array [
+  "update table set id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', sun = 'new time a day', updated_at = 'DATE', user = '{nickname:yutin,sex:true}', venus = 99 where id = 12",
+]
+`;
