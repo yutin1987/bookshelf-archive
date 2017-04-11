@@ -43,8 +43,8 @@ describe('bookshelf-archive help', () => {
       star_box: starBox,
     }]);
     const reply1 = await archiveModel.fetch();
+    expect(client).toMatchSnapshot();
     expect(reply1.toJSON()).toEqual({ ...data, starBox });
-
 
     client.mockClear();
     client.mockReturnValueOnce([{
@@ -53,7 +53,18 @@ describe('bookshelf-archive help', () => {
       star_box: starBox,
     }]);
     const reply2 = await ArchiveModel.table().select('*');
+    expect(client).toMatchSnapshot();
     expect(reply2).toEqual([{ ...data, starBox }]);
+
+    client.mockClear();
+    client.mockReturnValueOnce([{
+      ..._.omit(data, ArchiveModel.archive),
+      archive: JSON.stringify(_.pick(data, ArchiveModel.archive)),
+      star_box: starBox,
+    }]);
+    const reply3 = await ArchiveModel.fetchAll();
+    expect(client).toMatchSnapshot();
+    expect(reply3.toJSON()).toEqual([{ ...data, starBox }]);
   });
 
   it('when insert', async () => {

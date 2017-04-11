@@ -20,7 +20,7 @@ Array [
 
 exports[`bookshelf-archive help when insert 1`] = `
 Array [
-  "insert into table (archive, line, sed, star_box) values ('{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 'wow!! happy', 10, 'big')",
+  "insert into table (archive, created_at, line, sed, star_box, updated_at) values ('{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 'DATE', 'wow!! happy', 10, 'big', 'DATE')",
 ]
 `;
 
@@ -32,7 +32,7 @@ Array [
 
 exports[`bookshelf-archive help when insert and archive is null 1`] = `
 Array [
-  "insert into table (archive, line, sed) values ('{}', 'wow!! happy', 10)",
+  "insert into table (archive, created_at, line, sed, updated_at) values ('{}', 'DATE', 'wow!! happy', 10, 'DATE')",
 ]
 `;
 
@@ -42,9 +42,27 @@ Array [
 ]
 `;
 
+exports[`bookshelf-archive help when select 1`] = `
+Array [
+  "select table.* from table limit 1",
+]
+`;
+
+exports[`bookshelf-archive help when select 2`] = `
+Array [
+  "select * from table",
+]
+`;
+
+exports[`bookshelf-archive help when select 3`] = `
+Array [
+  "select table.* from table",
+]
+`;
+
 exports[`bookshelf-archive help when update 1`] = `
 Array [
-  "update table set archive = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big' where id = 12",
+  "update table set archive = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', updated_at = 'DATE' where id = 12",
 ]
 `;
 

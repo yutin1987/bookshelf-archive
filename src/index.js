@@ -6,7 +6,6 @@ import set from 'lodash/set';
 import map from 'lodash/map';
 import clone from 'lodash/clone';
 import merge from 'lodash/merge';
-import defaults from 'lodash/defaults';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import omit from 'lodash/omit';
@@ -17,7 +16,7 @@ import snakeCase from 'lodash/snakeCase';
 import isEmpty from 'lodash/isEmpty';
 
 module.exports = (bookshelf) => {
-  class Model extends bookshelf.Model {
+  bookshelf.Model = class extends bookshelf.Model {
 
     static softDelete = true;
 
@@ -27,17 +26,52 @@ module.exports = (bookshelf) => {
 
     static archiveField = 'archive';
 
+    static formatResponse(response) {
+      const { archiveField } = this;
+
+      map(response, (row, index) => {
+        if (!isPlainObject(row)) return;
+
+        const reply = mapKeys(row, (value, name) => camelCase(name));
+        if (reply[archiveField]) {
+          merge(reply, JSON.parse(reply[archiveField]));
+          delete reply[archiveField];
+        }
+
+        response[index] = reply;
+      });
+    }
+
+    static table(options) {
+      const { tableName, softField } = this;
+      const softDelete = get(options, 'softDelete', this.softDelete);
+      const table = bookshelf.knex.table(tableName);
+
+      if (softDelete) {
+        table.whereNull(`${tableName}.${softField}`);
+      }
+
+      table.on('query-response', this.formatResponse.bind(this));
+
+      return table;
+    }
+
+    static collection(...args) {
+      merge(
+        this.prototype,
+        pick(this, ['tableName', 'hasTimestamps', 'softDelete', 'softField', 'archive', 'archiveField']),
+      );
+
+      return super.collection.apply(this, args);
+    }
+
     constructor(...args) {
       super(...args);
 
-      defaults(this, {
-        tableName: this.constructor.tableName,
-        hasTimestamps: this.constructor.hasTimestamps,
-        softDelete: this.constructor.softDelete,
-        softField: this.constructor.softField,
-        archive: this.constructor.archive,
-        archiveField: this.constructor.archiveField,
-      });
+      merge(this, pick(
+        this.constructor,
+        ['tableName', 'hasTimestamps', 'softDelete', 'softField', 'archive', 'archiveField'],
+      ));
 
       this.on('fetching', this.mountFetch);
       this.on('fetching:collection', this.mountFetch);
@@ -86,36 +120,6 @@ module.exports = (bookshelf) => {
       );
     }
 
-    static formatResponse(response) {
-      const { archiveField } = this;
-
-      map(response, (row, index) => {
-        if (!isPlainObject(row)) return;
-
-        const reply = mapKeys(row, (value, name) => camelCase(name));
-        if (reply[archiveField]) {
-          merge(reply, JSON.parse(reply[archiveField]));
-          delete reply[archiveField];
-        }
-
-        response[index] = reply;
-      });
-    }
-
-    static table(options) {
-      const { tableName, softField } = this;
-      const softDelete = get(options, 'softDelete', this.softDelete);
-      const table = bookshelf.knex.table(tableName);
-
-      if (softDelete) {
-        table.whereNull(`${tableName}.${softField}`);
-      }
-
-      table.on('query-response', this.formatResponse.bind(this));
-
-      return table;
-    }
-
     async destroy(args) {
       const options = args ? clone(args) : {};
       const sync = this.sync(options);
@@ -155,7 +159,5 @@ module.exports = (bookshelf) => {
 
       return this;
     }
-  }
-
-  bookshelf.Model = Model;
+  };
 };
