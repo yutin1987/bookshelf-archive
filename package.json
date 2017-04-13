@@ -1,12 +1,12 @@
 {
   "name": "bookshelf-archive",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "npm run build",
     "test": "eslint ./src; jest --coverage ./src",
-    "build": "rm -rf lib/* && babel src --ignore __tests__ --ignore __mocks__ --out-dir lib"
+    "build": "rm -rf lib && babel src --ignore __tests__,__mocks__ --out-dir lib"
   },
   "repository": {
     "type": "git",

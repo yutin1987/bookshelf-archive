@@ -43,8 +43,9 @@ module.exports = (bookshelf) => {
     }
 
     static table(options) {
-      const { tableName, softField } = this;
+      const tableName = get(options, 'tableName', this.tableName);
       const softDelete = get(options, 'softDelete', this.softDelete);
+      const softField = get(options, 'softField', this.softField);
       const table = bookshelf.knex.table(tableName);
 
       if (softDelete) {
