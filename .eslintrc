@@ -6,7 +6,9 @@
     "describe": true,
     "it": true,
     "expect": true,
-    "beforeEach": true,
-    "afterEach": true
-  }
+    "afterAll": true
+  },
+  "rules": {
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/__mocks__/*.js"]}]
+  },
 }

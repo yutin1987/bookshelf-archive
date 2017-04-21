@@ -1,73 +1,217 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`bookshelf-archive help when destroy 1`] = `
+exports[`bookshelf-archive when destroy 1`] = `
 Array [
-  "delete from table where id = 12",
+  "delete from class_table where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when destroy 2`] = `
+exports[`bookshelf-archive when destroy 2`] = `
 Array [
-  "update table set deleted_at = 'DATE' where id = 12",
+  "update static_table set disabled = 'DATE' where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when destroy 3`] = `
+exports[`bookshelf-archive when destroy 3`] = `
 Array [
-  "update table set deleted_at = 'DATE' where star_box = 'big'",
+  "delete from extend_table where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when insert 1`] = `
+exports[`bookshelf-archive when destroy 4`] = `
 Array [
-  "insert into table (archive, created_at, line, sed, star_box, updated_at) values ('{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 'DATE', 'wow!! happy', 10, 'big', 'DATE')",
+  "update proto_table set closed = 'DATE' where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when insert 2`] = `
+exports[`bookshelf-archive when destroy 5`] = `
 Array [
-  "insert into table (created_at, line, sed, star_box, sun, updated_at, user, venus) values ('DATE', 'wow!! happy', 10, 'big', 'new time a day', 'DATE', '{nickname:yutin,sex:true}', 99)",
+  "update default_table set deleted_at = 'DATE' where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when insert and archive is null 1`] = `
+exports[`bookshelf-archive when destroy 6`] = `
 Array [
-  "insert into table (archive, created_at, line, sed, updated_at) values ('{}', 'DATE', 'wow!! happy', 10, 'DATE')",
+  "update default_table set deleted_at = 'DATE' where id = 12",
 ]
 `;
 
-exports[`bookshelf-archive help when insert and archive is null 2`] = `
+exports[`bookshelf-archive when insert 1`] = `
 Array [
-  "insert into table (created_at, line, sed, sun, updated_at, user, venus) values ('DATE', 'wow!! happy', 10, 'new time a day', 'DATE', '{nickname:yutin,sex:true}', 99)",
+  "insert into class_table (card, line, sed, star_box, sun, user, venus) values ('{max:99}', 'wow!! happy', 10, 'big', 'new time a day', '{nickname:yutin,sex:true}', 99)",
 ]
 `;
 
-exports[`bookshelf-archive help when select 1`] = `
+exports[`bookshelf-archive when insert 2`] = `
 Array [
-  "select table.* from table limit 1",
+  "insert into static_table (card, data, line, sed, star_box) values ('{max:99}', '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 'wow!! happy', 10, 'big')",
 ]
 `;
 
-exports[`bookshelf-archive help when select 2`] = `
+exports[`bookshelf-archive when insert 3`] = `
 Array [
-  "select * from table",
+  "insert into extend_table (card, line, sed, star_box, sun, user, venus) values ('{max:99}', 'wow!! happy', 10, 'big', 'new time a day', '{nickname:yutin,sex:true}', 99)",
 ]
 `;
 
-exports[`bookshelf-archive help when select 3`] = `
+exports[`bookshelf-archive when insert 4`] = `
 Array [
-  "select table.* from table",
+  "insert into proto_table (card, created_at, line, more, sed, star_box, updated_at) values ('{max:99}', 'DATE', 'wow!! happy', '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', 10, 'big', 'DATE')",
 ]
 `;
 
-exports[`bookshelf-archive help when update 1`] = `
+exports[`bookshelf-archive when insert 5`] = `
 Array [
-  "update table set archive = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', updated_at = 'DATE' where id = 12",
+  "insert into default_table (card, line, sed, star_box, sun, user, venus) values ('{max:99}', 'wow!! happy', 10, 'big', 'new time a day', '{nickname:yutin,sex:true}', 99)",
 ]
 `;
 
-exports[`bookshelf-archive help when update 2`] = `
+exports[`bookshelf-archive when select 1`] = `
 Array [
-  "update table set id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', sun = 'new time a day', updated_at = 'DATE', user = '{nickname:yutin,sex:true}', venus = 99 where id = 12",
+  "select class_table.* from class_table limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select 2`] = `
+Array [
+  "select static_table.* from static_table where static_table.disabled is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select 3`] = `
+Array [
+  "select extend_table.* from extend_table limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select 4`] = `
+Array [
+  "select proto_table.* from proto_table where proto_table.closed is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select 5`] = `
+Array [
+  "select default_table.* from default_table where default_table.deleted_at is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select all 1`] = `
+Array [
+  "select class_table.* from class_table",
+]
+`;
+
+exports[`bookshelf-archive when select all 2`] = `
+Array [
+  "select static_table.* from static_table where static_table.disabled is null",
+]
+`;
+
+exports[`bookshelf-archive when select all 3`] = `
+Array [
+  "select extend_table.* from extend_table",
+]
+`;
+
+exports[`bookshelf-archive when select all 4`] = `
+Array [
+  "select proto_table.* from proto_table where proto_table.closed is null",
+]
+`;
+
+exports[`bookshelf-archive when select all 5`] = `
+Array [
+  "select default_table.* from default_table where default_table.deleted_at is null",
+]
+`;
+
+exports[`bookshelf-archive when select use query 1`] = `
+Array [
+  "select * from class_table where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive when select use query 2`] = `
+Array [
+  "select * from static_table where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive when select use query 3`] = `
+Array [
+  "select * from extend_table where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive when select use query 4`] = `
+Array [
+  "select * from proto_table where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive when select use query 5`] = `
+Array [
+  "select * from default_table where star_box = 'big'",
+]
+`;
+
+exports[`bookshelf-archive when select with where 1`] = `
+Array [
+  "select class_table.* from class_table where class_table.star_box = 'big' limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select with where 2`] = `
+Array [
+  "select static_table.* from static_table where static_table.star_box = 'big' and static_table.disabled is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select with where 3`] = `
+Array [
+  "select extend_table.* from extend_table where extend_table.star_box = 'big' limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select with where 4`] = `
+Array [
+  "select proto_table.* from proto_table where proto_table.star_box = 'big' and proto_table.closed is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when select with where 5`] = `
+Array [
+  "select default_table.* from default_table where default_table.star_box = 'big' and default_table.deleted_at is null limit 1",
+]
+`;
+
+exports[`bookshelf-archive when update 1`] = `
+Array [
+  "update class_table set card = '{max:99}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', sun = 'new time a day', user = '{nickname:yutin,sex:true}', venus = 99 where id = 12",
+]
+`;
+
+exports[`bookshelf-archive when update 2`] = `
+Array [
+  "update static_table set card = '{max:99}', data = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big' where id = 12",
+]
+`;
+
+exports[`bookshelf-archive when update 3`] = `
+Array [
+  "update extend_table set card = '{max:99}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', sun = 'new time a day', user = '{nickname:yutin,sex:true}', venus = 99 where id = 12",
+]
+`;
+
+exports[`bookshelf-archive when update 4`] = `
+Array [
+  "update proto_table set card = '{max:99}', id = 12, line = 'wow!! happy', more = '{venus:99,sun:new time a day,user:{nickname:yutin,sex:true}}', sed = 10, star_box = 'big', updated_at = 'DATE' where id = 12",
+]
+`;
+
+exports[`bookshelf-archive when update 5`] = `
+Array [
+  "update default_table set card = '{max:99}', id = 12, line = 'wow!! happy', sed = 10, star_box = 'big', sun = 'new time a day', user = '{nickname:yutin,sex:true}', venus = 99 where id = 12",
 ]
 `;
