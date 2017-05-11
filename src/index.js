@@ -26,7 +26,7 @@ function buildQuery(builder) {
 
 function buildResponse(response, archiveField) {
   _.forEach(response, (row, index) => {
-    if (!_.isPlainObject(row)) return;
+    if (!_.isObject(row)) return;
 
     const data = _.mapKeys(row, (value, name) => _.camelCase(name));
 
