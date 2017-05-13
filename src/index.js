@@ -31,7 +31,8 @@ function buildResponse(response, archiveField) {
     const data = _.mapKeys(row, (value, name) => _.camelCase(name));
 
     if (archiveField && data[archiveField]) {
-      _.merge(data, JSON.parse(data[archiveField]));
+      const archive = data[archiveField];
+      _.assign(data, _.isObject(archive) ? archive : JSON.parse(archive));
       delete data[archiveField];
     }
 
@@ -52,10 +53,11 @@ module.exports = (bookshelf) => {
     initialize: function initialize(...args) {
       collectionPrototype.initialize(...args);
 
-      _.defaults(this.model.prototype, _.pick(
+      _.defaults(this.model.prototype, defaultConfigs);
+      _.assign(this.model.prototype, _.pick(
         this.model,
         ['tableName', 'hasTimestamps', 'softDelete', 'softField', 'archive', 'archiveField'],
-      ), defaultConfigs);
+      ));
     },
 
     query: function query(...args) {
@@ -70,10 +72,11 @@ module.exports = (bookshelf) => {
     initialize: function initialize(...args) {
       modelPrototype.initialize(...args);
 
-      _.defaults(this, _.pick(
+      _.defaults(this, defaultConfigs);
+      _.assign(this, _.pick(
         this.constructor,
         ['tableName', 'hasTimestamps', 'softDelete', 'softField', 'archive', 'archiveField'],
-      ), defaultConfigs);
+      ));
 
       this.on('fetching', mountSoftDelete.bind(this));
       this.on('fetching:collection', mountSoftDelete.bind(this));

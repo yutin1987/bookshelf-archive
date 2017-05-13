@@ -1,14 +1,17 @@
-/* eslint no-param-reassign: ["error", { "props": false }] */
-
+import knex, { client } from 'jest-mock-knex';
 import _ from 'lodash';
-import knex, { client } from 'knex';
+// import knex from 'knex';
 import bookshelf from 'bookshelf';
 import bookshelfArchive from '../';
+import config from '../../knexfile';
 
-const db = bookshelf(knex());
+process.setMaxListeners(0);
+
+const sql = knex(config);
+const db = bookshelf(sql);
 db.plugin(bookshelfArchive);
 
-const archive = ['venus', 'sun', 'user'];
+const archive = ['more'];
 
 class ClassModel extends db.Model {
   static tableName = 'class_table';
@@ -21,7 +24,7 @@ class StaticModel extends db.Model {
   static softDelete = true;
   static softField = 'disabled';
   static archive = archive;
-  static archiveField = 'data';
+  static archiveField = 'detail';
 }
 
 const ExtendModel = db.Model.extend({
@@ -35,7 +38,6 @@ const ProtoModel = db.Model.extend({
   softDelete: true,
   softField: 'closed',
   archive,
-  archiveField: 'more',
 });
 
 const DefaultModel = db.Model.extend({
@@ -43,51 +45,103 @@ const DefaultModel = db.Model.extend({
 });
 
 const data = {
-  id: 12,
-  sed: 10,
-  line: 'wow!! happy',
-  venus: 99,
-  sun: 'new time a day',
-  user: { nickname: 'yutin', sex: true },
-  card: { max: 99 },
+  maxSize: 10,
+  text: 'wow!! happy',
+  more: { nickname: 'yutin', sex: true },
 };
 
-const starBox = 'big';
-
 describe('bookshelf-archive', () => {
+  beforeAll(async () => {
+    await sql('class_table').truncate();
+    await sql('static_table').truncate();
+    await sql('extend_table').truncate();
+    await sql('proto_table').truncate();
+    await sql('default_table').truncate();
+  });
+
+  it('when insert', async () => {
+    await _.reduce([{
+      Model: ClassModel,
+      query: {
+        table: 'class_table',
+        max_size: data.maxSize,
+        text: data.text,
+        more: JSON.stringify(data.more),
+      },
+    }, {
+      Model: StaticModel,
+      query: {
+        table: 'static_table',
+        max_size: data.maxSize,
+        text: data.text,
+        detail: JSON.stringify({ more: data.more }),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
+      },
+    }, {
+      Model: ExtendModel,
+      query: {
+        table: 'extend_table',
+        max_size: data.maxSize,
+        text: data.text,
+        more: JSON.stringify(data.more),
+      },
+    }, {
+      Model: ProtoModel,
+      query: {
+        table: 'proto_table',
+        max_size: data.maxSize,
+        text: data.text,
+        archive: JSON.stringify({ more: data.more }),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
+      },
+    }, {
+      Model: DefaultModel,
+      query: {
+        table: 'default_table',
+        max_size: data.maxSize,
+        text: data.text,
+        more: JSON.stringify(data.more),
+      },
+    }], (result, { Model, query }) => result.then(async () => {
+      await result;
+      client.mockClear();
+      const model = await new Model({ ...data }).save();
+      expect(client).toMatchSnapshot();
+      expect(client).toHaveBeenCalledTimes(1);
+      expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
+      expect(model.id).toBe('1');
+    }), Promise.resolve());
+  });
+
   it('when select', async () => {
     await _.reduce([{
       Model: ClassModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'class_table' },
     }, {
       Model: StaticModel,
-      response: { data: JSON.stringify(_.pick(data, archive)) },
-      reply: { ...data },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
       query: { table: 'static_table', disabled: 'NULL' },
     }, {
       Model: ExtendModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'extend_table' },
     }, {
       Model: ProtoModel,
-      response: { more: JSON.stringify(_.pick(data, archive)) },
-      reply: { ...data },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
       query: { table: 'proto_table', closed: 'NULL' },
     }, {
       Model: DefaultModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'default_table', deleted_at: 'NULL' },
-    }], (result, { Model, response, reply, query }) => result.then(async () => {
-      const model = new Model();
+    }], (result, { Model, reply, query }) => result.then(async () => {
+      await result;
       client.mockClear();
-      client.mockReturnValueOnce([{ ..._.omit(data, archive), ...response, star_box: starBox }]);
-      const node = await model.fetch();
-      expect(node.toJSON()).toEqual({ ...reply, starBox });
+      const model = await (new Model()).fetch();
       expect(client).toMatchSnapshot();
+      expect(model.toJSON()).toEqual(expect.objectContaining(reply));
       expect(client).toHaveBeenCalledTimes(1);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
     }), Promise.resolve());
@@ -96,24 +150,29 @@ describe('bookshelf-archive', () => {
   it('when select with where', async () => {
     await _.reduce([{
       Model: ClassModel,
-      query: { table: 'class_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'class_table', id: [1, 2], max_size: data.maxSize },
     }, {
       Model: StaticModel,
-      query: { table: 'static_table', disabled: 'NULL', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
+      query: { table: 'static_table', id: [1, 2], disabled: 'NULL', max_size: data.maxSize },
     }, {
       Model: ExtendModel,
-      query: { table: 'extend_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'extend_table', id: [1, 2], max_size: data.maxSize },
     }, {
       Model: ProtoModel,
-      query: { table: 'proto_table', closed: 'NULL', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
+      query: { table: 'proto_table', id: [1, 2], closed: 'NULL', max_size: data.maxSize },
     }, {
       Model: DefaultModel,
-      query: { table: 'default_table', deleted_at: 'NULL', star_box: starBox },
-    }], (result, { Model, query }) => result.then(async () => {
-      const model = new Model({ starBox });
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'default_table', id: [1, 2], deleted_at: 'NULL', max_size: data.maxSize },
+    }], (result, { Model, reply, query }) => result.then(async () => {
       client.mockClear();
-      client.mockReturnValueOnce([{ ..._.omit(data, archive), star_box: starBox }]);
-      expect((await model.fetch()).toJSON()).toEqual({ ..._.omit(data, archive), starBox });
+      const model = new Model({ maxSize: data.maxSize });
+      model.query('whereIn', 'id', [1, 2]);
+      expect((await model.fetch()).toJSON()).toEqual(expect.objectContaining(reply));
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
@@ -123,33 +182,27 @@ describe('bookshelf-archive', () => {
   it('when select all', async () => {
     await _.reduce([{
       Model: ClassModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'class_table' },
     }, {
       Model: StaticModel,
-      response: { data: JSON.stringify(_.pick(data, archive)) },
-      reply: { ...data },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
       query: { table: 'static_table', disabled: 'NULL' },
     }, {
       Model: ExtendModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'extend_table' },
     }, {
       Model: ProtoModel,
-      response: { more: JSON.stringify(_.pick(data, archive)) },
-      reply: { ...data },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
       query: { table: 'proto_table', closed: 'NULL' },
     }, {
       Model: DefaultModel,
-      response: { archive: JSON.stringify(_.pick(data, archive)) },
-      reply: { ..._.omit(data, archive), archive: JSON.stringify(_.pick(data, archive)) },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'default_table', deleted_at: 'NULL' },
-    }], (result, { Model, response, reply, query }) => result.then(async () => {
+    }], (result, { Model, reply, query }) => result.then(async () => {
       client.mockClear();
-      client.mockReturnValueOnce([{ ..._.omit(data, archive), ...response, star_box: starBox }]);
-      expect((await Model.fetchAll()).toJSON()).toEqual([{ ...reply, starBox }]);
+      expect((await Model.fetchAll()).toJSON()[0]).toEqual(expect.objectContaining(reply));
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
@@ -159,80 +212,29 @@ describe('bookshelf-archive', () => {
   it('when select use query', async () => {
     await _.reduce([{
       Model: ClassModel,
-      query: { table: 'class_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'class_table', max_size: data.maxSize },
     }, {
       Model: StaticModel,
-      query: { table: 'static_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
+      query: { table: 'static_table', max_size: data.maxSize },
     }, {
       Model: ExtendModel,
-      query: { table: 'extend_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'extend_table', max_size: data.maxSize },
     }, {
       Model: ProtoModel,
-      query: { table: 'proto_table', star_box: starBox },
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, createdAt: expect.any(Date), updatedAt: expect.any(Date) },
+      query: { table: 'proto_table', max_size: data.maxSize },
     }, {
       Model: DefaultModel,
-      query: { table: 'default_table', star_box: starBox },
-    }], (result, { Model, query }) => result.then(async () => {
+      reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
+      query: { table: 'default_table', max_size: data.maxSize },
+    }], (result, { Model, reply, query }) => result.then(async () => {
       client.mockClear();
-      client.mockReturnValueOnce([{ ..._.omit(data, archive), star_box: starBox }]);
-      expect(await Model.query().where('starBox', starBox).select('*')).toEqual([{ ..._.omit(data, archive), starBox }]);
-      expect(client).toMatchSnapshot();
-      expect(client).toHaveBeenCalledTimes(1);
-      expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
-    }), Promise.resolve());
-  });
-
-  it('when insert', async () => {
-    await _.reduce([{
-      Model: ClassModel,
-      query: {
-        table: 'class_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
-      },
-    }, {
-      Model: StaticModel,
-      query: {
-        table: 'static_table',
-        star_box: starBox,
-        ..._.omit(data, _.concat('id', archive, 'card')),
-        data: JSON.stringify(_.pick(data, archive)),
-        card: JSON.stringify(data.card),
-      },
-    }, {
-      Model: ExtendModel,
-      query: {
-        table: 'extend_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
-      },
-    }, {
-      Model: ProtoModel,
-      query: {
-        table: 'proto_table',
-        star_box: starBox,
-        ..._.omit(data, _.concat('id', archive, 'card')),
-        more: JSON.stringify(_.pick(data, archive)),
-        card: JSON.stringify(data.card),
-      },
-    }, {
-      Model: DefaultModel,
-      query: {
-        table: 'default_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
-      },
-    }], (result, { Model, query }) => result.then(async () => {
-      client.mockClear();
-      client.mockReturnValueOnce([data.id]);
-      const model = await new Model({ ..._.omit(data, 'id'), starBox }).save();
-      expect(model.id).toBe(data.id);
+      expect(
+        (await Model.query().where('maxSize', data.maxSize).select('*'))[0],
+      ).toEqual(expect.objectContaining(reply));
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
@@ -244,54 +246,38 @@ describe('bookshelf-archive', () => {
       Model: ClassModel,
       query: {
         table: 'class_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
+        more: JSON.stringify({ nickname: 'orz' }),
       },
     }, {
       Model: StaticModel,
       query: {
         table: 'static_table',
-        star_box: starBox,
-        ..._.omit(data, _.concat('id', archive, 'card')),
-        data: JSON.stringify(_.pick(data, archive)),
-        card: JSON.stringify(data.card),
+        detail: JSON.stringify({ more: { nickname: 'orz' } }),
       },
     }, {
       Model: ExtendModel,
       query: {
         table: 'extend_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
+        more: JSON.stringify({ nickname: 'orz' }),
       },
     }, {
       Model: ProtoModel,
       query: {
         table: 'proto_table',
-        star_box: starBox,
-        ..._.omit(data, _.concat('id', archive, 'card')),
-        more: JSON.stringify(_.pick(data, archive)),
-        card: JSON.stringify(data.card),
+        archive: JSON.stringify({ more: { nickname: 'orz' } }),
       },
     }, {
       Model: DefaultModel,
       query: {
         table: 'default_table',
-        star_box: starBox,
-        ..._.omit(data, ['id', 'user', 'card']),
-        user: JSON.stringify(data.user),
-        card: JSON.stringify(data.card),
+        more: JSON.stringify({ nickname: 'orz' }),
       },
     }], (result, { Model, query }) => result.then(async () => {
       client.mockClear();
-      client.mockReturnValueOnce([1]);
-      await new Model({ id: data.id }).save({ ..._.omit(data, 'id'), starBox });
+      await new Model({ id: 1 }).save({ maxSize: 99, more: { nickname: 'orz' } });
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
-      expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
+      expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ ...query, max_size: 99 }));
     }), Promise.resolve());
   });
 
@@ -313,22 +299,19 @@ describe('bookshelf-archive', () => {
       query: { table: 'default_table', method: 'update', deleted_at: expect.any(Date) },
     }], (result, { Model, query }) => result.then(async () => {
       client.mockClear();
-      client.mockReturnValueOnce([1]);
-      await new Model({ id: data.id }).destroy();
+      await new Model({ id: 1 }).destroy();
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining(query));
     }), Promise.resolve());
 
     client.mockClear();
-    client.mockReturnValueOnce(0);
     let error;
     try {
-      await new DefaultModel({ id: data.id }).destroy({ require: true });
+      await new DefaultModel({ id: 1 }).destroy({ require: true });
     } catch (e) { error = e; }
     expect(client).toMatchSnapshot();
     expect(client).toHaveBeenCalledTimes(1);
     expect(error.message).toEqual('No Rows Deleted');
   });
 });
-
