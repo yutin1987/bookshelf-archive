@@ -215,3 +215,38 @@ Array [
   "update default_table set id = 1, max_size = 99, more = '{nickname:orz}' where id = 1",
 ]
 `;
+
+exports[`bookshelf-archive when update second time 1`] = `
+Array [
+  "select class_table.* from class_table where class_table.id = 1 limit 1",
+  "update class_table set id = '1', max_size = 99, more = '{nickname:yaya}', text = 'wow!! happy' where id = '1'",
+]
+`;
+
+exports[`bookshelf-archive when update second time 2`] = `
+Array [
+  "select static_table.* from static_table where static_table.id = 1 and static_table.disabled is null limit 1",
+  "update static_table set created_at = 'DATE', detail = '{more:{nickname:yaya}}', disabled = NULL, id = '1', max_size = 99, text = 'wow!! happy', updated_at = 'DATE' where id = '1'",
+]
+`;
+
+exports[`bookshelf-archive when update second time 3`] = `
+Array [
+  "select extend_table.* from extend_table where extend_table.id = 1 limit 1",
+  "update extend_table set id = '1', max_size = 99, more = '{nickname:yaya}', text = 'wow!! happy' where id = '1'",
+]
+`;
+
+exports[`bookshelf-archive when update second time 4`] = `
+Array [
+  "select proto_table.* from proto_table where proto_table.id = 1 and proto_table.closed is null limit 1",
+  "update proto_table set archive = '{more:{nickname:yaya}}', closed = NULL, created_at = 'DATE', id = '1', max_size = 99, text = 'wow!! happy', updated_at = 'DATE' where id = '1'",
+]
+`;
+
+exports[`bookshelf-archive when update second time 5`] = `
+Array [
+  "select default_table.* from default_table where default_table.id = 1 and default_table.deleted_at is null limit 1",
+  "update default_table set deleted_at = NULL, id = '1', max_size = 99, more = '{nickname:yaya}', text = 'wow!! happy' where id = '1'",
+]
+`;

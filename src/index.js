@@ -110,6 +110,14 @@ module.exports = (bookshelf) => {
       );
     },
 
+    set: function set(key, value, options) {
+      return modelPrototype.set.apply(this, [
+        _.isString(key) ? _.camelCase(key) : _.mapKeys(key, (val, name) => _.camelCase(name)),
+        value,
+        options,
+      ]);
+    },
+
     query: function query(...args) {
       const builder = modelPrototype.query.apply(this, args);
       const { archive, archiveField } = this;

@@ -1,6 +1,5 @@
 import knex, { client } from 'jest-mock-knex';
 import _ from 'lodash';
-// import knex from 'knex';
 import bookshelf from 'bookshelf';
 import bookshelfArchive from '../';
 import config from '../../knexfile';
@@ -169,6 +168,7 @@ describe('bookshelf-archive', () => {
       reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'default_table', id: [1, 2], deleted_at: 'NULL', max_size: data.maxSize },
     }], (result, { Model, reply, query }) => result.then(async () => {
+      await result;
       client.mockClear();
       const model = new Model({ maxSize: data.maxSize });
       model.query('whereIn', 'id', [1, 2]);
@@ -201,6 +201,7 @@ describe('bookshelf-archive', () => {
       reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'default_table', deleted_at: 'NULL' },
     }], (result, { Model, reply, query }) => result.then(async () => {
+      await result;
       client.mockClear();
       expect((await Model.fetchAll()).toJSON()[0]).toEqual(expect.objectContaining(reply));
       expect(client).toMatchSnapshot();
@@ -231,6 +232,7 @@ describe('bookshelf-archive', () => {
       reply: { ...data, id: '1', maxSize: `${data.maxSize}`, more: JSON.stringify(data.more) },
       query: { table: 'default_table', max_size: data.maxSize },
     }], (result, { Model, reply, query }) => result.then(async () => {
+      await result;
       client.mockClear();
       expect(
         (await Model.query().where('maxSize', data.maxSize).select('*'))[0],
@@ -273,10 +275,53 @@ describe('bookshelf-archive', () => {
         more: JSON.stringify({ nickname: 'orz' }),
       },
     }], (result, { Model, query }) => result.then(async () => {
+      await result;
       client.mockClear();
       await new Model({ id: 1 }).save({ maxSize: 99, more: { nickname: 'orz' } });
       expect(client).toMatchSnapshot();
       expect(client).toHaveBeenCalledTimes(1);
+      expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ ...query, max_size: 99 }));
+    }), Promise.resolve());
+  });
+
+  it('when update second time', async () => {
+    await _.reduce([{
+      Model: ClassModel,
+      query: {
+        table: 'class_table',
+        more: JSON.stringify({ nickname: 'yaya' }),
+      },
+    }, {
+      Model: StaticModel,
+      query: {
+        table: 'static_table',
+        detail: JSON.stringify({ more: { nickname: 'yaya' } }),
+      },
+    }, {
+      Model: ExtendModel,
+      query: {
+        table: 'extend_table',
+        more: JSON.stringify({ nickname: 'yaya' }),
+      },
+    }, {
+      Model: ProtoModel,
+      query: {
+        table: 'proto_table',
+        archive: JSON.stringify({ more: { nickname: 'yaya' } }),
+      },
+    }, {
+      Model: DefaultModel,
+      query: {
+        table: 'default_table',
+        more: JSON.stringify({ nickname: 'yaya' }),
+      },
+    }], (result, { Model, query }) => result.then(async () => {
+      await result;
+      client.mockClear();
+      const model = await new Model({ id: 1 }).fetch();
+      await model.save({ maxSize: 99, more: { nickname: 'yaya' } });
+      expect(client).toMatchSnapshot();
+      expect(client).toHaveBeenCalledTimes(2);
       expect(client).toHaveBeenLastCalledWith(expect.objectContaining({ ...query, max_size: 99 }));
     }), Promise.resolve());
   });
@@ -298,6 +343,7 @@ describe('bookshelf-archive', () => {
       Model: DefaultModel,
       query: { table: 'default_table', method: 'update', deleted_at: expect.any(Date) },
     }], (result, { Model, query }) => result.then(async () => {
+      await result;
       client.mockClear();
       await new Model({ id: 1 }).destroy();
       expect(client).toMatchSnapshot();
